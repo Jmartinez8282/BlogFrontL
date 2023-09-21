@@ -8,9 +8,26 @@ import {
   Col,
   ListGroup,
 } from "react-bootstrap/";
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import {useNavigate} from 'react-router-dom'
+import { checkToken } from "../Services/DataService";
 
 const Dashboard = () => {
+
+let navigate = useNavigate();
+  useEffect(() => {
+  //useEffect is the first thing that fires on load
+  //put any logic we want to fire onload
+  //our effect will fire if we have a change in the state in our depenency
+    if(!checkToken()) 
+    {
+      navigate("/Login");
+    }
+
+
+  }, [])
+
+
   //functions
   const handleSetTitle = (e) => setBlogTitle(e.target.value);
   const handleBlogDescription = (e) => setBlogDescription(e.target.value);
