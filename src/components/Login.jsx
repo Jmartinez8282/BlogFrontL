@@ -1,6 +1,7 @@
 import React,{useState} from 'react'
 import { Container, Row, Col, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { login, GetLoggedInuser  } from '../Services/DataService';
 
 
 const Login = () => {
@@ -12,12 +13,20 @@ const Login = () => {
 
     const handleUser = (e) => setUsername(e.target.value); 
     const handlePassword = (e) => setPassword(e.target.value); 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         let userData = {
             username: Username,
             password: Password
         }
+
+        let token = await login(userData)
         console.log(userData);
+        if(token.token != null)
+        {
+          localStorage.setItem("Token", token.token);
+          GetLoggedInuser(Username);
+          navigate("/Dashboard");
+        }
     }; 
   return (
     <div>

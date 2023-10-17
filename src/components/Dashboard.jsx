@@ -103,10 +103,52 @@ let navigate = useNavigate();
       Published: false,
     },
   ]);
+  const [userId, setUserId] = useState(0);
+  const [Publishername, setPublishername] = useState("");
 
   //bools
   const [show, setShow] = useState(false);
   const [edit, setEdit] = useState(false);
+
+
+  const handleSaveWithPublish = () =>
+  {
+   
+    const Published = {
+      Id: 0,
+      UserId: 0,
+      Publishername: "",
+      Title: blogTitle,
+      Image: blogImage,
+      Description: blogDescription,
+      Date: new Date(),
+      Category: blogCategory,
+      Tag: blogTags,
+      IsDelted: false,
+      IsPublished: true
+    }
+
+  }
+  const handleSaveWithUnpublish = () =>
+  {
+   
+    const notPublished = {
+      Id: 0,
+      UserId: 0,
+      Publishername: "",
+      Title: "",
+      Image: "",
+      Description: "",
+      Date: "",
+      Category: "",
+      Tag:"",
+      IsDelted: false,
+      IsPublished: true
+    }
+
+  }
+
+
 
   return (
     <>
@@ -180,10 +222,10 @@ let navigate = useNavigate();
             <Button variant="outline-secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button variant="outline-primary" onClick={handleClose}>
+            <Button variant="outline-primary" onClick={handleSaveWithPublish}>
               {edit ? "Save Changes" : "Save"}
             </Button>
-            <Button variant="outline-primary" onClick={handleClose}>
+            <Button variant="outline-primary" onClick={handleSaveWithUnpublish}>
               {edit ? "Save Changes" : "Save"} and Publish
             </Button>
           </Modal.Footer>
