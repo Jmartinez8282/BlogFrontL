@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap/";
 import { useState,useEffect } from "react";
 import {useNavigate} from 'react-router-dom'
-import { checkToken } from "../Services/DataService";
+import { checkToken, LoggedInData } from "../Services/DataService";
 
 const Dashboard = () => {
 
@@ -24,6 +24,9 @@ let navigate = useNavigate();
       navigate("/Login");
     }
 
+   let userInfo = LoggedInData();
+   console.log(userInfo);
+
 
   }, [])
 
@@ -33,7 +36,7 @@ let navigate = useNavigate();
   const handleBlogDescription = (e) => setBlogDescription(e.target.value);
   const handleTag = (e) => setBlogTags(e.target.value);
   const handleCategory = (e) => setBlogCategory(e.target.value);
-  const handleImage = (e) => setBlogImage(e.target.value);
+  // const handleSaveImage= ({target}) => setBlogImage(target.files[0]);
   const handleClose = () => setShow(false);
   const handleShow = (e) => {
     setShow(true);
@@ -103,8 +106,8 @@ let navigate = useNavigate();
       Published: false,
     },
   ]);
-  const [userId, setUserId] = useState(0);
-  const [Publishername, setPublishername] = useState("");
+  // const [userId, setUserId] = useState(0);
+  // const [Publishername, setPublishername] = useState("");
 
   //bools
   const [show, setShow] = useState(false);
@@ -113,11 +116,12 @@ let navigate = useNavigate();
 
   const handleSaveWithPublish = () =>
   {
-   
+    console.log("Clicked");
+   let {publishername, userId} = LoggedInData();
     const Published = {
       Id: 0,
-      UserId: 0,
-      Publishername: "",
+      UserId: userId,
+      Publishername: publishername,
       Title: blogTitle,
       Image: blogImage,
       Description: blogDescription,
@@ -126,28 +130,45 @@ let navigate = useNavigate();
       Tag: blogTags,
       IsDelted: false,
       IsPublished: true
-    }
-
+        }
+        console.log(Published);
+        handleClose();
   }
   const handleSaveWithUnpublish = () =>
   {
    
+    let {publishername, userId} = LoggedInData();
     const notPublished = {
       Id: 0,
-      UserId: 0,
-      Publishername: "",
-      Title: "",
-      Image: "",
-      Description: "",
-      Date: "",
-      Category: "",
-      Tag:"",
+      UserId: userId,
+      Publishername: publishername,
+      Title: blogTitle,
+      Image: blogImage,
+      Description: blogDescription,
+      Date: new Date(),
+      Category: blogCategory,
+      Tag: blogTags,
       IsDelted: false,
-      IsPublished: true
-    }
-
+      IsPublished: false
+        }
+        console.log(notPublished);
+        handleClose();
   }
 
+
+  //handle our image
+  const handleImage = async (e) =>
+  {
+    let file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => 
+    {
+      console.log(reader.result);
+
+    }
+    reader.readAsDataURL(file);
+    // setBlogImage(target.files[0])
+  }
 
 
   return (
@@ -212,7 +233,7 @@ let navigate = useNavigate();
                   type="file"
                   placeholder="Select Image from file"
                   accept="image/png, image/jpg"
-                  value={blogImage}
+                  // value={blogImage}
                   onChange={handleImage}
                 />
               </Form.Group>
@@ -222,10 +243,10 @@ let navigate = useNavigate();
             <Button variant="outline-secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button variant="outline-primary" onClick={handleSaveWithPublish}>
+            <Button variant="outline-primary" onClick={handleSaveWithUnpublish}>
               {edit ? "Save Changes" : "Save"}
             </Button>
-            <Button variant="outline-primary" onClick={handleSaveWithUnpublish}>
+            <Button variant="outline-primary" onClick={handleSaveWithPublish}>
               {edit ? "Save Changes" : "Save"} and Publish
             </Button>
           </Modal.Footer>
