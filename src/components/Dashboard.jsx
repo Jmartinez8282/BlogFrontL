@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap/";
 import { useState,useEffect } from "react";
 import {useNavigate} from 'react-router-dom'
-import { checkToken, LoggedInData } from "../Services/DataService";
+import { AddBlogItems, checkToken, LoggedInData,getBlogItems, GetblogItemsByUserId } from "../Services/DataService";
 
 const Dashboard = () => {
 
@@ -59,53 +59,7 @@ let navigate = useNavigate();
   const [blogDescription, setBlogDescription] = useState("");
   const [blogCategory, setBlogCategory] = useState("");
   const [blogTags, setBlogTags] = useState("");
-  const [blogItems, setBlogItems] = useState([
-    {
-      Id: 1,
-      Title: "Top Finishing and Crossing Drills",
-      Publisher: "anonymous",
-      Date: "01-13-2022",
-      Text: "Developing finishing and crossing skills is an important aspect of soccer that can greatly constribute to your player.",
-      Image: "./assets/Images/3soccerballs.jpg",
-      Published: true,
-    },
-    {
-      Id: 2,
-      Title: "6 Soccer Drills to Work on Defense",
-      Publisher: "anonymous",
-      Date: "01-14-2022",
-      Text: "A strong defense is the backbone of any successful soccer team",
-      Image: "./assets/Images/3soccerballs.jpg",
-      Published: true,
-    },
-    {
-      Id: 3,
-      Title: "5 Small Side Games",
-      Publisher: "anonymous",
-      Date: "01-15-2022",
-      Text: "Small-sided games create a fast-paced and intense environment.",
-      Image: "./assets/Images/3soccerballs.jpg",
-      Published: true,
-    },
-    {
-      Id: 4,
-      Title: "5 Fun 1 V 1 Youth Soccer Activites",
-      Publisher: "anonymous",
-      Date: "01-15-2022",
-      Text: "One of the best ways to naturally bring out the competitive nature.",
-      Image: "./assets/Images/3soccerballs.jpg",
-      Published: false,
-    },
-    {
-      Id: 5,
-      Title: "5 Fun warm up soccer drills",
-      Publisher: "anonymous",
-      Date: "01-15-2022",
-      Text: "One of the challenges for youth soccer coaches is to make sure their players are always excited to come to practice.",
-      Image: "./assets/Images/3soccerballs.jpg",
-      Published: false,
-    },
-  ]);
+  const [blogItems, setBlogItems] = useState([]);
   // const [userId, setUserId] = useState(0);
   // const [Publishername, setPublishername] = useState("");
 
@@ -114,9 +68,9 @@ let navigate = useNavigate();
   const [edit, setEdit] = useState(false);
 
 
-  const handleSaveWithPublish = () =>
+  const handleSaveWithPublish = async () =>
   {
-    console.log("Clicked");
+   
    let {publishername, userId} = LoggedInData();
     const Published = {
       Id: 0,
@@ -133,6 +87,14 @@ let navigate = useNavigate();
         }
         console.log(Published);
         handleClose();
+       let result = await AddBlogItems(Published);
+
+       if(result) 
+       {
+      let userBlogItems = await GetblogItemsByUserId(userId)
+      setBlogItems(userBlogItems)
+      console.log(userBlogItems,"yes it works");
+       }
   }
   const handleSaveWithUnpublish = () =>
   {
@@ -153,6 +115,7 @@ let navigate = useNavigate();
         }
         console.log(notPublished);
         handleClose();
+        AddBlogItems(notPublished);
   }
 
 
@@ -264,10 +227,10 @@ let navigate = useNavigate();
                 <Accordion.Body
                   style={{ backgroundColor: "#3f3f3f", color: "azure" }}
                 >
-                  {blogItems.map((item) =>
-                    item.Published ? (
-                      <ListGroup key={item.Title}>
-                        {item.Title}
+                  {blogItems.map((item,i) =>
+                    item.isPublished ? (
+                      <ListGroup key={i}>
+                        {item.title}
                         <Col className="d-flex justify-content-end">
                           <Button variant="outline-danger mx-2">Delete</Button>
                           <Button variant="outline-info mx-2" >Edit</Button>
@@ -283,9 +246,9 @@ let navigate = useNavigate();
                 <Accordion.Body
                   style={{ backgroundColor: "#3f3f3f", color: "azure" }}
                 >
-                  {blogItems.map((item) =>
-                    !item.Published ? (
-                      <ListGroup key={item.Title}>{item.Title}
+                  {blogItems.map((item,i) =>
+                    !item.isPublished ? (
+                      <ListGroup key={i}>{item.title}
                       <Col className="d-flex justify-content-end">
                           <Button variant="outline-danger mx-2">Delete</Button>
                           <Button variant="outline-info mx-2" >Edit</Button>
