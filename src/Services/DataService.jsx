@@ -135,5 +135,24 @@ const GetblogItemsByUserId = async (userId) =>
     return data;
 }
 
+const updateBlogItems = async (blogItems) => 
+{
+    let result = await fetch("http://localhost:5246/blog/UpdateBlogItems",{
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(blogItems)
+    });
+        if(!result.ok)
+        {
+            const message = `An erro has take place ${result.status}`
+            throw new Error(message);
+        }
+        let data = await result.json();
+        console.log(data);
+        return data;
+}
 
-export {checkToken, createAccount, login, GetLoggedInuser,LoggedInData,AddBlogItems,sendData,getBlogItems,GetblogItemsByUserId}
+
+export {checkToken, createAccount, login, GetLoggedInuser,LoggedInData,AddBlogItems,sendData,getBlogItems,GetblogItemsByUserId,updateBlogItems}

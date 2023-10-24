@@ -16,6 +16,7 @@ import {
   LoggedInData,
   getBlogItems,
   GetblogItemsByUserId,
+  updateBlogItems
 } from "../Services/DataService";
 import Spinner from 'react-bootstrap/Spinner';
 
@@ -73,6 +74,9 @@ const Dashboard = () => {
     setIsPublished(isPublished);
   };
 
+  const [blogUserId, setBlogUserId] = useState(0);
+  const [blogpublishername, setBlogpublishername] = useState("")
+
   //create useStates for our forms
   const [blogTitle, setBlogTitle] = useState("");
   const [blogImage, setBlogImage] = useState("");
@@ -91,12 +95,12 @@ const Dashboard = () => {
   const [isDelted, setIsDelted] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
 
-  const handleSaveWithPublish = async () => {
+  const handleSave = async ({target:{textContent}}) => {
     // let { publishername, userId } = LoggedInData();
     const Published = {
-      Id: 0,
-      UserId: userId,
-      Publishername: publishername,
+      Id: blogId,
+      UserId: blogUserId,
+      Publishername: blogpublishername,
       Title: blogTitle,
       Image: blogImage,
       Description: blogDescription,
@@ -104,42 +108,75 @@ const Dashboard = () => {
       Category: blogCategory,
       Tag: blogTags,
       IsDelted: false,
-      IsPublished: true,
+      IsPublished: textContent == "Save" || textContent == "Save Changes" ? false: true,
     };
     console.log(Published);
     handleClose();
-    let result = await AddBlogItems(Published);
+
+    let result = false;
+
+    if(edit) {
+      result = await updateBlogItems(Published);
+    }else {
+      result = await AddBlogItems(Published);
+    }
+
+
+    // let result = await AddBlogItems(Published);
 
     if (result) {
-      let userBlogItems = await GetblogItemsByUserId(userId);
+      let userBlogItems = await GetblogItemsByUserId(blogUserId);
+      console.log(userBlogItems);
       setBlogItems(userBlogItems);
       console.log(userBlogItems, "yes it works");
+    }else {
+      alert(`Blog Item not ${edit ? "Updated" : "Added"}`)
     }
   };
-  const handleSaveWithUnpublish = async () => {
-    let { publishername, userId } = LoggedInData();
-    const notPublished = {
-      Id: 0,
-      UserId: userId,
-      Publishername: publishername,
-      Title: blogTitle,
-      Image: blogImage,
-      Description: blogDescription,
-      Date: new Date(),
-      Category: blogCategory,
-      Tag: blogTags,
-      IsDelted: false,
-      IsPublished: false,
-    };
-    console.log(notPublished);
-    handleClose();
-    let result = await AddBlogItems(notPublished);
+  // const handleSaveWithUnpublish = async () => {
+  //   let { publishername, userId } = LoggedInData();
+  //   const notPublished = {
+  //     Id: 0,
+  //     UserId: userId,
+  //     Publishername: publishername,
+  //     Title: blogTitle,
+  //     Image: blogImage,
+  //     Description: blogDescription,
+  //     Date: new Date(),
+  //     Category: blogCategory,
+  //     Tag: blogTags,
+  //     IsDelted: false,
+  //     IsPublished: false,
+  //   };
+  //   console.log(notPublished);
+  //   handleClose();
+  //   let result = await AddBlogItems(notPublished);
 
-    if (result) {
-      let userBlogItems = await GetblogItemsByUserId(userId);
-      setBlogItems(userBlogItems);
+  //   if (result) {
+  //     let userBlogItems = await GetblogItemsByUserId(userId);
+  //     setBlogItems(userBlogItems);
+  //   }
+  // };
+
+    //handlePublish 
+
+    const handlePublish = async (item) => {
+      console.log("first");
+      item.isPublished = !item.isPublished;
+
+      let result = await updateBlogItems(item);
+      if(result) 
+      {
+        let userBlogItems = await GetblogItemsByUserId(blogUserId)
+        setBlogItems(userBlogItems);
+        console.log(userBlogItems);
+      }else{
+        alert(`Blog item not ${edit ? "Updated" : "Added"}`);
+      }
+
     }
-  };
+
+
 
   //handle our image
   const handleImage = async (e) => {
@@ -155,7 +192,7 @@ const Dashboard = () => {
   return (
     <>
       <Container>
-        <Button className="me-3" variant="outline-primary" onClick={(e)=> handleShow(e, {id,userId,publishername:"", title:"",image:"", description:"",category:"", tag:"",isDelted:false, isPublished:false})}>
+        <Button className="me-3" variant="outline-primary" onClick={(e)=> handleShow(e, {blogId,userId,publishername:"", title:"",image:"", description:"",category:"", tag:"",isDelted:false, isPublished:false})}>
           Add Blog Item
         </Button>
 
@@ -224,18 +261,16 @@ const Dashboard = () => {
             <Button variant="outline-secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button variant="outline-primary" onClick={handleSaveWithUnpublish}>
+            <Button variant="outline-primary" onClick={handleSave}>
               {edit ? "Save Changes" : "Save"}
             </Button>
-            <Button variant="outline-primary" onClick={handleSaveWithPublish}>
+            <Button variant="outline-primary" onClick={handleSave}>
               {edit ? "Save Changes" : "Save"} and Publish
             </Button>
           </Modal.Footer>
         </Modal>
 
-        <Button variant="outline-primary" onClick={handleShow}>
-          Edit Blog Item
-        </Button>
+        
 
         <Row>
           <Col>
@@ -260,8 +295,8 @@ const Dashboard = () => {
                               Delete
                             </Button>
                             <Button variant="outline-info mx-2" onClick={(e) => handleShow(e, item) }>Edit</Button>
-                            <Button variant="outline-primary mx-2">
-                              Publish
+                            <Button variant="outline-primary mx-2" onClick={() => handlePublish(item)}>
+                              Unpublish
                             </Button>
                           </Col>
                         </ListGroup>
@@ -282,9 +317,9 @@ const Dashboard = () => {
                             <Button variant="outline-danger mx-2">
                               Delete
                             </Button>
-                            <Button variant="outline-info mx-2">Edit</Button>
-                            <Button variant="outline-primary mx-2">
-                              Upublish
+                            <Button variant="outline-info mx-2" onClick={(e) => handleShow(e, item) }>Edit</Button>
+                            <Button variant="outline-primary mx-2" onClick={() => handlePublish(item)}>
+                              Publish
                             </Button>
                           </Col>
                         </ListGroup>
