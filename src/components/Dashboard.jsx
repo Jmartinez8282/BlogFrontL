@@ -8,28 +8,39 @@ import {
   Col,
   ListGroup,
 } from "react-bootstrap/";
-import { useState,useEffect } from "react";
-import {useNavigate} from 'react-router-dom'
-import { AddBlogItems, checkToken, LoggedInData,getBlogItems, GetblogItemsByUserId } from "../Services/DataService";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  AddBlogItems,
+  checkToken,
+  LoggedInData,
+  getBlogItems,
+  GetblogItemsByUserId,
+} from "../Services/DataService";
+import Spinner from 'react-bootstrap/Spinner';
 
 const Dashboard = () => {
-
-let navigate = useNavigate();
+  let navigate = useNavigate();
   useEffect(() => {
-  //useEffect is the first thing that fires on load
-  //put any logic we want to fire onload
-  //our effect will fire if we have a change in the state in our depenency
-    if(!checkToken()) 
-    {
+    //useEffect is the first thing that fires on load
+    //put any logic we want to fire onload
+    //our effect will fire if we have a change in the state in our depenency
+    if (!checkToken()) {
       navigate("/Login");
+    } else {
+      setTimeout(async () => {
+        let loggedInData = LoggedInData();
+        console.log(loggedInData);
+        let userBlogItems = await GetblogItemsByUserId(loggedInData.userId);
+        setBlogItems(userBlogItems);
+        console.log(userBlogItems);
+        setIsLoading(false);
+      }, 1000);
     }
 
-   let userInfo = LoggedInData();
-   console.log(userInfo);
-
-
-  }, [])
-
+    // let userInfo = LoggedInData();
+    // console.log(userInfo);
+  }, []);
 
   //functions
   const handleSetTitle = (e) => setBlogTitle(e.target.value);
@@ -37,20 +48,29 @@ let navigate = useNavigate();
   const handleTag = (e) => setBlogTags(e.target.value);
   const handleCategory = (e) => setBlogCategory(e.target.value);
   // const handleSaveImage= ({target}) => setBlogImage(target.files[0]);
+ 
   const handleClose = () => setShow(false);
-  const handleShow = (e) => {
+  
+  //handle show
+  const handleShow = (e,{id,userId, publishername,title,image, description,category,tag,isDelted,isPublished}) => {
     setShow(true);
     if (e.target.textContent == "Add Blog Item") {
       setEdit(false);
-      setBlogTitle("");
-      setBlogDescription("");
-      setBlogCategory("");
+      
     } else {
       setEdit(true);
-      setBlogTitle("My Awsome Title");
-      setBlogDescription("My Awsome Description");
-      setBlogCategory("Fitness");
+      // console.log(blogData);
     }
+    setBlogId(id);
+    setUserId(userId);
+    setPublishername(publishername);
+    setBlogImage(image);
+    setBlogTitle(title);
+    setBlogDescription(description);
+    setBlogCategory(category);
+    setBlogTags(tag);
+    setIsDelted(isDelted);
+    setIsPublished(isPublished);
   };
 
   //create useStates for our forms
@@ -60,18 +80,19 @@ let navigate = useNavigate();
   const [blogCategory, setBlogCategory] = useState("");
   const [blogTags, setBlogTags] = useState("");
   const [blogItems, setBlogItems] = useState([]);
-  // const [userId, setUserId] = useState(0);
-  // const [Publishername, setPublishername] = useState("");
+  const [blogId, setBlogId] = useState(0);
+  const [userId, setUserId] = useState(0);
+  const [Publishername, setPublishername] = useState("");
 
   //bools
   const [show, setShow] = useState(false);
   const [edit, setEdit] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDelted, setIsDelted] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
 
-
-  const handleSaveWithPublish = async () =>
-  {
-   
-   let {publishername, userId} = LoggedInData();
+  const handleSaveWithPublish = async () => {
+    // let { publishername, userId } = LoggedInData();
     const Published = {
       Id: 0,
       UserId: userId,
@@ -83,23 +104,20 @@ let navigate = useNavigate();
       Category: blogCategory,
       Tag: blogTags,
       IsDelted: false,
-      IsPublished: true
-        }
-        console.log(Published);
-        handleClose();
-       let result = await AddBlogItems(Published);
+      IsPublished: true,
+    };
+    console.log(Published);
+    handleClose();
+    let result = await AddBlogItems(Published);
 
-       if(result) 
-       {
-      let userBlogItems = await GetblogItemsByUserId(userId)
-      setBlogItems(userBlogItems)
-      console.log(userBlogItems,"yes it works");
-       }
-  }
-  const handleSaveWithUnpublish = () =>
-  {
-   
-    let {publishername, userId} = LoggedInData();
+    if (result) {
+      let userBlogItems = await GetblogItemsByUserId(userId);
+      setBlogItems(userBlogItems);
+      console.log(userBlogItems, "yes it works");
+    }
+  };
+  const handleSaveWithUnpublish = async () => {
+    let { publishername, userId } = LoggedInData();
     const notPublished = {
       Id: 0,
       UserId: userId,
@@ -111,33 +129,33 @@ let navigate = useNavigate();
       Category: blogCategory,
       Tag: blogTags,
       IsDelted: false,
-      IsPublished: false
-        }
-        console.log(notPublished);
-        handleClose();
-        AddBlogItems(notPublished);
-  }
+      IsPublished: false,
+    };
+    console.log(notPublished);
+    handleClose();
+    let result = await AddBlogItems(notPublished);
 
+    if (result) {
+      let userBlogItems = await GetblogItemsByUserId(userId);
+      setBlogItems(userBlogItems);
+    }
+  };
 
   //handle our image
-  const handleImage = async (e) =>
-  {
+  const handleImage = async (e) => {
     let file = e.target.files[0];
     const reader = new FileReader();
-    reader.onloadend = () => 
-    {
+    reader.onloadend = () => {
       console.log(reader.result);
-
-    }
+    };
     reader.readAsDataURL(file);
     // setBlogImage(target.files[0])
-  }
-
+  };
 
   return (
     <>
       <Container>
-        <Button className="me-3" variant="outline-primary" onClick={handleShow}>
+        <Button className="me-3" variant="outline-primary" onClick={(e)=> handleShow(e, {id,userId,publishername:"", title:"",image:"", description:"",category:"", tag:"",isDelted:false, isPublished:false})}>
           Add Blog Item
         </Button>
 
@@ -221,46 +239,62 @@ let navigate = useNavigate();
 
         <Row>
           <Col>
-            <Accordion defaultActiveKey={["0", "1"]} alwaysOpen>
-              <Accordion.Item eventKey="0">
-                <Accordion.Header>Publish</Accordion.Header>
-                <Accordion.Body
-                  style={{ backgroundColor: "#3f3f3f", color: "azure" }}
-                >
-                  {blogItems.map((item,i) =>
-                    item.isPublished ? (
-                      <ListGroup key={i}>
-                        {item.title}
-                        <Col className="d-flex justify-content-end">
-                          <Button variant="outline-danger mx-2">Delete</Button>
-                          <Button variant="outline-info mx-2" >Edit</Button>
-                          <Button variant="outline-primary mx-2">Publish</Button>
-                        </Col>
-                      </ListGroup>
-                    ) : null
-                  )}
-                </Accordion.Body>
-              </Accordion.Item>
-              <Accordion.Item eventKey="1">
-                <Accordion.Header>Unpublished</Accordion.Header>
-                <Accordion.Body
-                  style={{ backgroundColor: "#3f3f3f", color: "azure" }}
-                >
-                  {blogItems.map((item,i) =>
-                    !item.isPublished ? (
-                      <ListGroup key={i}>{item.title}
-                      <Col className="d-flex justify-content-end">
-                          <Button variant="outline-danger mx-2">Delete</Button>
-                          <Button variant="outline-info mx-2" >Edit</Button>
-                          <Button variant="outline-primary mx-2">Upublish</Button>
-                        </Col>
-                      
-                      </ListGroup>
-                    ) : null
-                  )}
-                </Accordion.Body>
-              </Accordion.Item>
-            </Accordion>
+          {isLoading ?<> <Spinner animation="border" variant="info" /> <h1>Loading ....</h1></> : 
+            blogItems.length == 0 ? (
+              <h1 className="text-center">
+                No Blog Items. Add a Blog Item Above
+              </h1>
+            ) : (
+              <Accordion defaultActiveKey={["0", "1"]} alwaysOpen>
+                <Accordion.Item eventKey="0">
+                  <Accordion.Header>Publish</Accordion.Header>
+                  <Accordion.Body
+                    style={{ backgroundColor: "#3f3f3f", color: "azure" }}
+                    >
+                    {blogItems.map((item, i) =>
+                      item.isPublished ? (
+                        <ListGroup key={i}>
+                          {item.title}
+                          <Col className="d-flex justify-content-end">
+                            <Button variant="outline-danger mx-2">
+                              Delete
+                            </Button>
+                            <Button variant="outline-info mx-2" onClick={(e) => handleShow(e, item) }>Edit</Button>
+                            <Button variant="outline-primary mx-2">
+                              Publish
+                            </Button>
+                          </Col>
+                        </ListGroup>
+                      ) : null
+                      )}
+                  </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey="1">
+                  <Accordion.Header>Unpublished</Accordion.Header>
+                  <Accordion.Body
+                    style={{ backgroundColor: "#3f3f3f", color: "azure" }}
+                    >
+                    {blogItems.map((item, i) =>
+                      !item.isPublished ? (
+                        <ListGroup key={i}>
+                          {item.title}
+                          <Col className="d-flex justify-content-end">
+                            <Button variant="outline-danger mx-2">
+                              Delete
+                            </Button>
+                            <Button variant="outline-info mx-2">Edit</Button>
+                            <Button variant="outline-primary mx-2">
+                              Upublish
+                            </Button>
+                          </Col>
+                        </ListGroup>
+                      ) : null
+                      )}
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Accordion>
+            )}
+          
           </Col>
         </Row>
       </Container>
