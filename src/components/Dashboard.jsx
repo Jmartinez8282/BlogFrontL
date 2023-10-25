@@ -16,9 +16,9 @@ import {
   LoggedInData,
   getBlogItems,
   GetblogItemsByUserId,
-  updateBlogItems
+  updateBlogItems,
 } from "../Services/DataService";
-import Spinner from 'react-bootstrap/Spinner';
+import Spinner from "react-bootstrap/Spinner";
 
 const Dashboard = () => {
   let navigate = useNavigate();
@@ -49,15 +49,28 @@ const Dashboard = () => {
   const handleTag = (e) => setBlogTags(e.target.value);
   const handleCategory = (e) => setBlogCategory(e.target.value);
   // const handleSaveImage= ({target}) => setBlogImage(target.files[0]);
- 
+
   const handleClose = () => setShow(false);
-  
+
   //handle show
-  const handleShow = (e,{id,userId, publishername,title,image, description,category,tag,isDelted,isPublished}) => {
+  const handleShow = (
+    e,
+    {
+      id,
+      userId,
+      publishername,
+      title,
+      image,
+      description,
+      category,
+      tag,
+      isDelted,
+      isPublished,
+    }
+  ) => {
     setShow(true);
     if (e.target.textContent == "Add Blog Item") {
       setEdit(false);
-      
     } else {
       setEdit(true);
       // console.log(blogData);
@@ -75,7 +88,7 @@ const Dashboard = () => {
   };
 
   const [blogUserId, setBlogUserId] = useState(0);
-  const [blogpublishername, setBlogpublishername] = useState("")
+  const [blogpublishername, setBlogpublishername] = useState("");
 
   //create useStates for our forms
   const [blogTitle, setBlogTitle] = useState("");
@@ -95,10 +108,10 @@ const Dashboard = () => {
   const [isDelted, setIsDelted] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
 
-  const handleSave = async ({target:{textContent}}) => {
+  const handleSave = async ({ target: { textContent } }) => {
     // let { publishername, userId } = LoggedInData();
     const Published = {
-      Id: blogId,
+      Id: 0,
       UserId: blogUserId,
       Publishername: blogpublishername,
       Title: blogTitle,
@@ -108,19 +121,19 @@ const Dashboard = () => {
       Category: blogCategory,
       Tag: blogTags,
       IsDelted: false,
-      IsPublished: textContent == "Save" || textContent == "Save Changes" ? false: true,
+      IsPublished:
+        textContent == "Save" || textContent == "Save Changes" ? false : true,
     };
     console.log(Published);
     handleClose();
 
     let result = false;
 
-    if(edit) {
+    if (edit) {
       result = await updateBlogItems(Published);
-    }else {
+    } else {
       result = await AddBlogItems(Published);
     }
-
 
     // let result = await AddBlogItems(Published);
 
@@ -129,8 +142,8 @@ const Dashboard = () => {
       console.log(userBlogItems);
       setBlogItems(userBlogItems);
       console.log(userBlogItems, "yes it works");
-    }else {
-      alert(`Blog Item not ${edit ? "Updated" : "Added"}`)
+    } else {
+      alert(`Blog Item not ${edit ? "Updated" : "Added"}`);
     }
   };
   // const handleSaveWithUnpublish = async () => {
@@ -158,23 +171,37 @@ const Dashboard = () => {
   //   }
   // };
 
-    //handlePublish 
+  //handlePublish
 
-    const handlePublish = async (item) => {
-      console.log("first");
-      item.isPublished = !item.isPublished;
+  const handlePublish = async (item) => {
+    console.log("first");
+    item.isPublished = !item.isPublished;
 
-      let result = await updateBlogItems(item);
-      if(result) 
-      {
-        let userBlogItems = await GetblogItemsByUserId(blogUserId)
-        setBlogItems(userBlogItems);
-        console.log(userBlogItems);
-      }else{
-        alert(`Blog item not ${edit ? "Updated" : "Added"}`);
-      }
-
+    let result = await updateBlogItems(item);
+    if (result) {
+      let userBlogItems = await GetblogItemsByUserId(blogUserId);
+      setBlogItems(userBlogItems);
+      console.log(userBlogItems);
+    } else {
+      alert(`Blog item not ${edit ? "Updated" : "Added"}`);
     }
+  };
+
+
+  //handle delete
+  const handleDelete = async (item) => {
+    console.log("first");
+    item.isDelted = !item.isDelted;
+
+    let result = await updateBlogItems(item);
+    if (result) {
+      let userBlogItems = await GetblogItemsByUserId(blogUserId);
+      setBlogItems(userBlogItems);
+      console.log(userBlogItems);
+    } else {
+      alert(`Blog item not ${edit ? "Updated" : "Added"}`);
+    }
+  };
 
 
 
@@ -184,6 +211,7 @@ const Dashboard = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       console.log(reader.result);
+      setBlogImage(reader.result);
     };
     reader.readAsDataURL(file);
     // setBlogImage(target.files[0])
@@ -192,7 +220,24 @@ const Dashboard = () => {
   return (
     <>
       <Container>
-        <Button className="me-3" variant="outline-primary" onClick={(e)=> handleShow(e, {blogId,userId,publishername:"", title:"",image:"", description:"",category:"", tag:"",isDelted:false, isPublished:false})}>
+        <Button
+          className="me-3"
+          variant="outline-primary"
+          onClick={(e) =>
+            handleShow(e, {
+              id: 0,
+              userId: blogUserId,
+              publishername: blogpublishername,
+              title: "",
+              image: "",
+              description: "",
+              category: "",
+              tag: "",
+              isDelted: false,
+              isPublished: false,
+            })
+          }
+        >
           Add Blog Item
         </Button>
 
@@ -270,12 +315,15 @@ const Dashboard = () => {
           </Modal.Footer>
         </Modal>
 
-        
-
         <Row>
           <Col>
-          {isLoading ?<> <Spinner animation="border" variant="info" /> <h1>Loading ....</h1></> : 
-            blogItems.length == 0 ? (
+            {isLoading ? (
+              <>
+                {" "}
+                <Spinner animation="border" variant="info" />{" "}
+                <h1>Loading ....</h1>
+              </>
+            ) : blogItems.length == 0 ? (
               <h1 className="text-center">
                 No Blog Items. Add a Blog Item Above
               </h1>
@@ -285,51 +333,66 @@ const Dashboard = () => {
                   <Accordion.Header>Publish</Accordion.Header>
                   <Accordion.Body
                     style={{ backgroundColor: "#3f3f3f", color: "azure" }}
-                    >
+                  >
                     {blogItems.map((item, i) =>
-                      item.isPublished ? (
+                      item.isPublished && !item.isDelted ? (
                         <ListGroup key={i}>
                           {item.title}
                           <Col className="d-flex justify-content-end">
-                            <Button variant="outline-danger mx-2">
+                            <Button variant="outline-danger mx-2" onClick={() => handleDelete(item)}>
                               Delete
                             </Button>
-                            <Button variant="outline-info mx-2" onClick={(e) => handleShow(e, item) }>Edit</Button>
-                            <Button variant="outline-primary mx-2" onClick={() => handlePublish(item)}>
+                            <Button
+                              variant="outline-info mx-2"
+                              onClick={(e) => handleShow(e, item)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline-primary mx-2"
+                              onClick={() => handlePublish(item)}
+                            >
                               Unpublish
                             </Button>
                           </Col>
                         </ListGroup>
                       ) : null
-                      )}
+                    )}
                   </Accordion.Body>
                 </Accordion.Item>
                 <Accordion.Item eventKey="1">
                   <Accordion.Header>Unpublished</Accordion.Header>
                   <Accordion.Body
                     style={{ backgroundColor: "#3f3f3f", color: "azure" }}
-                    >
+                  >
                     {blogItems.map((item, i) =>
-                      !item.isPublished ? (
+                      !item.isPublished && !item.isDelted ? (
                         <ListGroup key={i}>
                           {item.title}
                           <Col className="d-flex justify-content-end">
-                            <Button variant="outline-danger mx-2">
+                            <Button variant="outline-danger mx-2" onClick={() => handleDelete(item)}>
                               Delete
                             </Button>
-                            <Button variant="outline-info mx-2" onClick={(e) => handleShow(e, item) }>Edit</Button>
-                            <Button variant="outline-primary mx-2" onClick={() => handlePublish(item)}>
+                            <Button
+                              variant="outline-info mx-2"
+                              onClick={(e) => handleShow(e, item)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline-primary mx-2"
+                              onClick={() => handlePublish(item)}
+                            >
                               Publish
                             </Button>
                           </Col>
                         </ListGroup>
                       ) : null
-                      )}
+                    )}
                   </Accordion.Body>
                 </Accordion.Item>
               </Accordion>
             )}
-          
           </Col>
         </Row>
       </Container>
