@@ -32,6 +32,8 @@ const Dashboard = () => {
       setTimeout(async () => {
         let loggedInData = LoggedInData();
         console.log(loggedInData);
+        setUserId(loggedInData.userId)
+        setPublishername(loggedInData.publishername)
         let userBlogItems = await GetblogItemsByUserId(loggedInData.userId);
         setBlogItems(userBlogItems);
         console.log(userBlogItems);
